@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Data Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #4f6ef7;
+    --accent2: #7c3aed;
+    --green: #10b981;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --text: #e8e8f0;
+    --text2: #8888a8;
+    --text3: #555570;
+    --glow: rgba(79,110,247,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,110,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,110,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px;
+  }
+
+  /* Header */
+  header {
+    margin-bottom: 48px;
+  }
+
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .logo-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    color: var(--text2);
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--text) 60%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  /* Input card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.4;
+  }
+
+  .card-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .input-wrap {
+    flex: 1;
+    position: relative;
+  }
+
+  .input-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    pointer-events: none;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 14px 14px 14px 44px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--glow);
+  }
+
+  input[type="text"]::placeholder { color: var(--text3); }
+
+  .btn-generate {
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-generate:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(79,110,247,0.3); }
+  .btn-generate:active { transform: translateY(0); }
+  .btn-generate:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Mode tabs */
+  .mode-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 16px;
+    width: fit-content;
+  }
+
+  .mode-tab {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    background: none;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  .mode-tab.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-radius: 8px;
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--text2);
+    min-height: 44px;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--text3);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .status-dot.loading { background: var(--amber); animation: pulse 1s ease-in-out infinite; }
+  .status-dot.success { background: var(--green); }
+  .status-dot.error { background: var(--red); }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* Results section */
+  .results {
+    display: none;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .results.visible { display: flex; }
+
+  /* Data table */
+  .data-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .data-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .data-type-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .badge-company { background: rgba(79,110,247,0.15); color: var(--accent); }
+  .badge-job { background: rgba(124,58,237,0.15); color: #a78bfa; }
+
+  .data-card-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .btn-download {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text2);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Noto Sans JP', sans-serif;
+    text-decoration: none;
+  }
+  .btn-download:hover { border-color: var(--accent); color: var(--text); }
+
+  .table-wrap {
+    overflow-x: auto;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--surface2);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 500;
+    color: var(--text2);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+    color: var(--text);
+    vertical-align: top;
+    max-width: 260px;
+    word-break: break-word;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody tr:hover td { background: rgba(79,110,247,0.04); }
+
+  .field-name {
+    color: var(--text2);
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .field-value-empty { color: var(--text3); font-style: italic; font-size: 11px; }
+
+  /* Download all row */
+  .download-all-row {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+
+  .btn-primary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79,110,247,0.3); }
+
+  /* Spinner */
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+    flex-shrink: 0;
+  }
+  .spinner.visible { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Info chip */
+  .info-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .chip-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Fade in animation */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeUp 0.4s ease forwards; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo-row">
+      <div class="logo-icon">⚡</div>
+      <span class="logo-text">CRM Data Generator</span>
+    </div>
+    <h1>会社名・URLから<br>CRMデータを自動生成</h1>
+    <p class="subtitle">会社名またはマイナビ転職などの求人URLを入力すると、<br>company_input・job_inputのCSVデータを自動で生成します。</p>
+  </header>
+
+  <!-- Input card -->
+  <div class="card">
+    <div class="card-label">▸ Input</div>
+
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="setMode('company')" id="tab-company">会社名で検索</button>
+      <button class="mode-tab" onclick="setMode('url')" id="tab-url">求人URLを使用</button>
+    </div>
+
+    <div class="input-row">
+      <div class="input-wrap">
+        <svg id="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="main-input"
+          placeholder="例：株式会社スカイフィールドコーポレーション"
+          onkeydown="if(event.key==='Enter') generate()">
+      </div>
+      <button class="btn-generate" id="gen-btn" onclick="generate()">
+        <span id="btn-text">生成する</span>
+        <div class="spinner" id="btn-spinner"></div>
+      </button>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">会社名または求人URLを入力してください</span>
+    </div>
+
+    <div class="info-row">
+      <div class="chip"><div class="chip-dot"></div>Claude AI による自動解析</div>
+      <div class="chip"><div class="chip-dot"></div>company_input & job_input 対応</div>
+      <div class="chip"><div class="chip-dot"></div>CSV ダウンロード可能</div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+
+    <!-- Company Data -->
+    <div class="data-card fade-in" id="company-card">
+      <div class="data-card-header">
+        <div class="data-card-title">
+          <span class="data-type-badge badge-company">Company</span>
+          <h3>会社情報</h3>
+        </div>
+        <button class="btn-download" onclick="downloadCSV('company')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV ダウンロード
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table id="company-table">
+          <thead><tr><th>フィールド</th><th>値</th></tr></thead>
+          <tbody id="company-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Job Data -->
+    <div class="data-card fade-in" id="job-card">
+      <div class="data-card-header">
+        <div class="data-card-title">
+          <span class="data-type-badge badge-job">Job</span>
+          <h3>求人情報</h3>
+        </div>
+        <button class="btn-download" onclick="downloadCSV('job')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV ダウンロード
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table id="job-table">
+          <thead><tr><th>フィールド</th><th>値</th></tr></thead>
+          <tbody id="job-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Download all -->
+    <div class="download-all-row">
+      <button class="btn-primary" onclick="downloadCSV('company')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        company_input.csv
+      </button>
+      <button class="btn-primary" onclick="downloadCSV('job')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        job_input.csv
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────
+let currentMode = 'company';
+let companyData = {};
+let jobData = {};
+
+// ─── Column definitions ───────────────────────────────
+const COMPANY_COLS = ['ID','削除','企業名','契約ステータス','報酬パターン','報酬詳細','URL','本社_都道府県','本社_住所','業界','上場/非上場','会社概要','担当役職','担当者','代表TEL','直通TEL','メール','紹介方法','請求先：担当役職','請求先：担当者名','請求方法','請求先_都道府県','請求先_市区町村','請求先_町丁','請求先_残りの住所','請求先_郵便番号','請求先_e-mail','データID','取引先の担当者.id','評価','選考フロー','企業FB','候補者FB','備考','DMテンプレ'];
+
+const JOB_COLS = ['ID','削除','採用中','社外求人票の企業名表示','企業','管理用タイトル','表示用タイトル','業界','職種','仕事内容','業務内容の変更の範囲','必須要件','最低提示年収（万円）','最高提示年収（万円）','給与形態','賃金詳細','時間外労働の有無','勤務時間','休憩時間','都道府県','就業場所','就業場所の変更の範囲','受動喫煙対策の有無','受動喫煙対策の詳細','試用期間','雇用形態','契約期間の有無','契約の更新','更新上限','休日','加入保険','手当・福利厚生','選考フロー','雇用期間（事業報告書用）','募集開始日（事業報告書用）','募集終了日（事業報告書用）','募集人数（事業報告書用）','取扱業務等の区分(2024)（事業報告書用）','有効期間','歓迎条件','歓迎スキル','よくある落選理由','非公開条件','推し/訴求ポイント','その他','報酬パターン'];
+
+// ─── UI helpers ───────────────────────────────────────
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('tab-company').classList.toggle('active', mode==='company');
+  document.getElementById('tab-url').classList.toggle('active', mode==='url');
+  const input = document.getElementById('main-input');
+  const icon = document.getElementById('input-icon');
+  if (mode === 'url') {
+    input.placeholder = '例：https://tenshoku.mynavi.jp/jobinfo-358817-5-8-1/';
+    icon.innerHTML = '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>';
+  } else {
+    input.placeholder = '例：株式会社スカイフィールドコーポレーション';
+    icon.innerHTML = '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>';
+  }
+}
+
+function setStatus(type, msg) {
+  const dot = document.getElementById('status-dot');
+  dot.className = 'status-dot' + (type ? ' '+type : '');
+  document.getElementById('status-text').textContent = msg;
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('gen-btn');
+  const spinner = document.getElementById('btn-spinner');
+  const btnText = document.getElementById('btn-text');
+  btn.disabled = on;
+  spinner.classList.toggle('visible', on);
+  btnText.textContent = on ? '解析中...' : '生成する';
+}
+
+// ─── Main generate ────────────────────────────────────
+async function generate() {
+  const input = document.getElementById('main-input').value.trim();
+  if (!input) { setStatus('error','入力してください'); return; }
+
+  setLoading(true);
+  setStatus('loading','AIが情報を解析しています...');
+  document.getElementById('results').classList.remove('visible');
+
+  try {
+    const result = await callClaude(input, currentMode);
+    companyData = result.company;
+    jobData = result.job;
+    renderTable('company', companyData);
+    renderTable('job', jobData);
+    document.getElementById('results').classList.add('visible');
+    setStatus('success','生成が完了しました！CSVをダウンロードできます。');
+  } catch(e) {
+    setStatus('error', 'エラー: ' + e.message);
+  }
+  setLoading(false);
+}
+
+// ─── Claude API ───────────────────────────────────────
+async function callClaude(input, mode) {
+  const isUrl = mode === 'url' || input.startsWith('http');
+
+  const systemPrompt = `あなたはCRMシステム用のデータ入力専門家です。
+与えられた会社名またはURLから、以下の2つのJSONオブジェクトを生成してください。
+必ず有効なJSONのみを返し、マークダウンや説明文は一切含めないでください。
+
+company_inputのフィールド:
+${COMPANY_COLS.join(', ')}
+
+job_inputのフィールド:
+${JOB_COLS.join(', ')}
+
+ルール:
+- 不明なフィールドはnullにする（IDや削除フィールドはnull）
+- 業界は以下から選ぶ: IT・WEBサービス, Sler・通信, 人材・BPO, 広告・PR・マスコミ, コンサルティング, サービス（無形）, サービス（有形）, 製造業, 流通・小売, 商社, 物流・運輸, 不動産, 建築・土木, 金融・保険, 士業, メディカル, エネルギー・インフラ関連, 行政・農林水産, その他
+- 都道府県は「東京都」「大阪府」などの形式
+- 給与形態は「月給」「年俸」「時給」のいずれか
+- 雇用形態は「正社員」「契約社員」「業務委託」などのいずれか
+- 上場/非上場は「上場」か「非上場」のいずれか
+- 採用中はtrue/false
+- 年収は数値（万円単位）
+- 求人情報がない場合はjobのすべてのフィールドをnullにする
+
+必ず以下の形式で返すこと:
+{"company":{...},"job":{...}}`;
+
+  const userMsg = isUrl
+    ? `以下のURLの求人ページから会社情報と求人情報を抽出してください。URLページの内容を詳細に解析して、できる限り多くのフィールドを埋めてください。\nURL: ${input}`
+    : `以下の会社名について、一般的な知識から会社情報を生成してください。求人情報は入力がないためnullにしてください。\n会社名: ${input}`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      tools: isUrl ? [{
+        type: 'web_search_20250305',
+        name: 'web_search'
+      }] : undefined,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMsg }]
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || `API error ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  // Collect all text blocks
+  const fullText = data.content
+    .filter(b => b.type === 'text')
+    .map(b => b.text)
+    .join('');
+
+  // Parse JSON from response
+  const jsonMatch = fullText.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('JSONの解析に失敗しました');
+
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonMatch[0]);
+  } catch(e) {
+    throw new Error('JSONのパースに失敗しました: ' + e.message);
+  }
+
+  if (!parsed.company || !parsed.job) throw new Error('レスポンス形式が正しくありません');
+  return parsed;
+}
+
+// ─── Render table ─────────────────────────────────────
+function renderTable(type, data) {
+  const cols = type === 'company' ? COMPANY_COLS : JOB_COLS;
+  const tbody = document.getElementById(type + '-tbody');
+  tbody.innerHTML = cols.map(col => {
+    const val = data[col];
+    const hasVal = val !== null && val !== undefined && val !== '';
+    return `<tr>
+      <td class="field-name">${col}</td>
+      <td>${hasVal ? escapeHtml(String(val)) : '<span class="field-value-empty">—</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── CSV download ─────────────────────────────────────
+function downloadCSV(type) {
+  const cols = type === 'company' ? COMPANY_COLS : JOB_COLS;
+  const data = type === 'company' ? companyData : jobData;
+  if (!cols || Object.keys(data).length === 0) return;
+
+  const rows = [
+    cols.map(c => csvEscape(c)).join(','),
+    cols.map(c => {
+      const v = data[c];
+      return csvEscape(v === null || v === undefined ? '' : String(v));
+    }).join(',')
+  ];
+
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (type === 'company' ? 'company_input' : 'job_input') + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function csvEscape(v) {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+</script>
+</body>
+</html>
